@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lwg.dao.UserDao">
+
+    <select id="selectAll" resultType="com.lwg.domain.User">
+        select id,username,birthday,sex,address from user
+    </select>
+
+    <select id="select" resultType="com.lwg.domain.User">
+        select id,username,birthday,sex,address from user where id = #{id}
+    </select>
+
+    <insert id="insertUser">
+    <selectKey keyColumn="id" keyProperty="id" resultType="int" order="AFTER">
+        select last_insert_id()
+    </selectKey>
+        insert into user values (null,#{username},#{birthday},#{sex},#{address})
+    </insert>
+
+    <update id="upDateUser">
+        update user set username=#{username},sex=#{sex} where id = #{id}
+    </update>
+
+    <delete id="deleteUser">
+        delete from user where id = #{id}
+    </delete>
+
+    <select id="getUserByName" resultType="com.lwg.domain.User">
+         select id,username,birthday,sex,address from user where username like '%${username}%' and sex=#{sex}
+    </select>
+
+    <select id="getUserByName2" resultType="com.lwg.domain.User">
+         select id,username,birthday,sex,address from user where username like "%"#{username}"%" and sex=#{sex}
+    </select>
+
+    <select id="getUserByName3" resultType="com.lwg.domain.User">
+         select id,username,birthday,sex,address from user where username like "%"#{username}"%" and sex=#{sex}
+    </select>
+
+    <select id="getUserByName4" resultType="com.lwg.domain.User">
+         select id,username,birthday,sex,address from user where username like "%"#{username}"%" and sex=#{sex}
+    </select>
+    
+    
+    <sql id="sqlId">
+        select id,username,birthday,sex,address from user
+    </sql>
+    
+    <select id="getDyName" resultType="User">
+        <include refid="sqlId"></include>
+        <where>
+            <if test="username != null and username !=''  ">
+                username like "%"#{username}"%"
+            </if>
+            <if test="sex != null and sex != ''">
+                and sex=#{sex}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getDyName2" resultType="User">
+        <include refid="sqlId"></include> where
+         <choose>
+             <when test="username != null and username !=''">
+                 username like "%"#{username}"%"
+             </when>
+
+             <when test="sex != null and sex != ''">
+                 sex=#{sex}
+             </when>
+             <otherwise>
+                 1=1
+             </otherwise>
+         </choose>
+    </select>
+
+
+    <select id="getUserByIds" resultType="User">
+        <include refid="sqlId"></include> where id in
+        <foreach collection="list" item="myid" open="(" close=")" separator=",">
+            #{myid}
+        </foreach>
+    </select>
+
+
+    <insert id="insertUsers" parameterType="java.util.List">
+        insert into user(username,birthday,sex,address) values
+        <foreach collection="list" item="user"  separator=",">
+            (#{user.username},#{user.birthday,jdbcType=DATE},#{user.sex},#{user.address})
+        </foreach>
+    </insert>
+
+    <update id="upDateUserDy" parameterType="User">
+        update user
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <delete id="deleteUsers" parameterType="java.lang.reflect.Array">
+        delete from user where id in
+        <foreach collection="array" open="(" close=")" separator="," item="id">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <!--==================================================================-->
+    <select id="getUserAndCnum" resultType="UserView">
+        select u.*,c.cnum from user u,card c where u.id=c.u_id
+    </select>
+    
+    <resultMap id="oneToOneRs" type="user">
+       <result column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+        <association property="card" javaType="card">
+            <result column="cnum" property="cnum"/>
+        </association>
+    </resultMap>
+
+    <select id="oneToOne" resultMap="oneToOneRs">
+        select u.*,c.cnum from user u,card c where u.id=c.u_id
+    </select>
+
+<!--===========================================================-->
+    <resultMap id="oneToOneRs2" type="user">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+        <association column="id" property="card" javaType="card" select="getCardByUid">
+        </association>
+    </resultMap>
+
+    <select id="oneToOne2" resultMap="oneToOneRs2">
+        select * from user
+    </select>
+    <select id="getCardByUid" parameterType="int" resultType="card">
+        select * from card where u_id=#{uid}
+    </select>
+
+
+
+<!--==========================================================================-->
+    <resultMap id="oneToDuoRs" type="UserViewOrder">
+        <result column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+        <collection property="orders" javaType="ArrayList" ofType="Orders" column="id" select="getOrderById"/>
+    </resultMap>
+
+    <select id="oneToDuo" resultMap="oneToDuoRs">
+        select * from user where id = #{id}
+    </select>
+
+    <select id="getOrderById" resultType="Orders">
+        select * from orders where userId = #{id}
+    </select>
+
+    <!--=======================================-->
+
+    <resultMap id="oneToDuoRs2" type="User">
+        <id property="id" column="id"/>
+        <result column="username" property="username"/>
+        <result column="birthday" property="birthday"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+        <collection property="ordersList" ofType="Orders" >
+            <result column="number" property="number"/>
+            <result column="note" property="note"/>
+        </collection>
+    </resultMap>
+
+    <select id="oneToDuo2" resultMap="oneToDuoRs2">
+        select u.*,o.id oid,o.number,o.note from user u, orders o where u.id = o.userId and u.id = #{id}
+    </select>
+
+
+
+</mapper>

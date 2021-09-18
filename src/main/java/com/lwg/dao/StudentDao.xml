@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lwg.dao.StudentDao">
+
+    <!--=============================作业==================================-->
+
+    <select id="selStudent" resultMap="selStu">
+       select s.*,p.pnumber from student s left join paper p on s.sid = p.s_id
+    </select>
+
+    <resultMap id="selStu" type="student" autoMapping="true">
+        <association property="paper" javaType="paper">
+            <result column="pnumber" property="pnumber"/>
+        </association>
+    </resultMap>
+    
+    
+    
+    <select id="selClass" resultMap="selCla">
+        select c.*,s.* from classes c left join student s on c.cid = s.cla_id where c.cid = #{id}
+    </select>
+
+    <resultMap id="selCla" type="classes" autoMapping="true">
+        <collection property="students" ofType="student" autoMapping="true">
+        </collection>
+    </resultMap>
+    
+    
+    
+
+
+</mapper>
